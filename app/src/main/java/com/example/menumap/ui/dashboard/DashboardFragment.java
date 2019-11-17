@@ -1,35 +1,108 @@
 package com.example.menumap.ui.dashboard;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.media.Image;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.menumap.R;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
+import com.google.firebase.ml.vision.document.FirebaseVisionCloudDocumentRecognizerOptions;
+import com.google.firebase.ml.vision.document.FirebaseVisionDocumentText;
+import com.google.firebase.ml.vision.document.FirebaseVisionDocumentTextRecognizer;
+
+import java.util.Arrays;
 
 public class DashboardFragment extends Fragment {
 
     private DashboardViewModel dashboardViewModel;
+    private ImageView mImageView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        dashboardViewModel =
-                ViewModelProviders.of(this).get(DashboardViewModel.class);
+
         View root = inflater.inflate(R.layout.fragment_dashboard, container, false);
-        final TextView textView = root.findViewById(R.id.text_dashboard);
-        dashboardViewModel.getText().observe(this, new Observer<String>() {
+        mImageView = root.findViewById(R.id.imageView);
+        mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onChanged(@Nullable String s) {
-                textView.setText(s);
+            public void onClick(View view) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, 1);
             }
         });
         return root;
     }
+
+    private FirebaseVisionImage imageFromBitmap(Bitmap bitmap) {
+        // [START image_from_bitmap]
+        return FirebaseVisionImage.fromBitmap(bitmap);
+        // [END image_from_bitmap]
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == 1 && resultCode == 1 && data != null){
+            Log.d("check", "in onActivityResult");
+            Bundle extras = data.getExtras();
+            if(extras != null) {
+                Bitmap bm = (Bitmap) extras.get("data");
+                this.mImageView.setImageBitmap(bm);
+
+                FirebaseVisionImage image = imageFromBitmap(bm);
+
+
+                FirebaseVisionCloudDocumentRecognizerOptions options =
+                        new FirebaseVisionCloudDocumentRecognizerOptions.Builder()
+                                .setLanguageHints(Arrays.asList("en", "hi"))
+                                .build();
+
+                FirebaseVisionDocumentTextRecognizer detector = FirebaseVision.getInstance()
+                        .getCloudDocumentTextRecognizer(options);
+
+                detector.processImage(image)
+                        .addOnSuccessListener(new OnSuccessListener<FirebaseVisionDocumentText>() {
+                            @Override
+                            public void onSuccess(FirebaseVisionDocumentText result) {
+                                String resultText = result.getText();
+                                Log.d("result", resultText);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d("Failure", e.getLocalizedMessage());
+                            }
+                        });
+
+            }
+        }
+    }
+
+
 }

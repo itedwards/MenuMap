@@ -1,8 +1,12 @@
 package com.example.menumap.ui.dashboard;
 
+import android.widget.ImageView;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+
+import com.example.menumap.R;
 
 public class DashboardViewModel extends ViewModel {
 
