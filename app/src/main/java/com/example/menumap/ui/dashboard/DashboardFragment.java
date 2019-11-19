@@ -30,12 +30,16 @@ import androidx.lifecycle.ViewModelProviders;
 import com.example.menumap.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 import com.google.firebase.ml.vision.document.FirebaseVisionCloudDocumentRecognizerOptions;
 import com.google.firebase.ml.vision.document.FirebaseVisionDocumentText;
 import com.google.firebase.ml.vision.document.FirebaseVisionDocumentTextRecognizer;
+import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptions;
+import com.google.firebase.ml.vision.text.FirebaseVisionText;
+import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
 import java.util.Arrays;
 
@@ -43,6 +47,7 @@ public class DashboardFragment extends Fragment {
 
     private DashboardViewModel dashboardViewModel;
     private ImageView mImageView;
+    private FirebaseVisionTextRecognizer mDetector;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -56,6 +61,15 @@ public class DashboardFragment extends Fragment {
                 startActivityForResult(intent, 1);
             }
         });
+
+        FirebaseVisionCloudTextRecognizerOptions options =
+                new FirebaseVisionCloudTextRecognizerOptions.Builder()
+                .setLanguageHints(Arrays.asList("en", "hi"))
+                .build();
+
+        mDetector =  FirebaseVision.getInstance()
+                .getCloudTextRecognizer();
+
         return root;
     }
 
@@ -67,7 +81,7 @@ public class DashboardFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == 1 && resultCode == 1 && data != null){
+        if(requestCode == 1 && resultCode == -1 && data != null){
             Log.d("check", "in onActivityResult");
             Bundle extras = data.getExtras();
             if(extras != null) {
@@ -77,18 +91,10 @@ public class DashboardFragment extends Fragment {
                 FirebaseVisionImage image = imageFromBitmap(bm);
 
 
-                FirebaseVisionCloudDocumentRecognizerOptions options =
-                        new FirebaseVisionCloudDocumentRecognizerOptions.Builder()
-                                .setLanguageHints(Arrays.asList("en", "hi"))
-                                .build();
-
-                FirebaseVisionDocumentTextRecognizer detector = FirebaseVision.getInstance()
-                        .getCloudDocumentTextRecognizer(options);
-
-                detector.processImage(image)
-                        .addOnSuccessListener(new OnSuccessListener<FirebaseVisionDocumentText>() {
+                Task<FirebaseVisionText> result = mDetector.processImage(image)
+                        .addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
                             @Override
-                            public void onSuccess(FirebaseVisionDocumentText result) {
+                            public void onSuccess(FirebaseVisionText result) {
                                 String resultText = result.getText();
                                 Log.d("result", resultText);
                             }
@@ -96,7 +102,7 @@ public class DashboardFragment extends Fragment {
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                Log.d("Failure", e.getLocalizedMessage());
+                                e.printStackTrace();
                             }
                         });
 
