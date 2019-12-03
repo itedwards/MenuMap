@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
@@ -33,6 +34,12 @@ import com.example.menumap.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions;
+import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage;
+import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentification;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateLanguage;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslator;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOptions;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
@@ -50,6 +57,7 @@ public class DashboardFragment extends Fragment {
     private DashboardViewModel dashboardViewModel;
     private ImageView mImageView;
     private Button mCameraBtn;
+    private String mText;
     private TextView mResult;
     private FirebaseVisionTextRecognizer mDetector;
 
@@ -70,10 +78,6 @@ public class DashboardFragment extends Fragment {
             }
         });
 
-        FirebaseVisionCloudTextRecognizerOptions options =
-                new FirebaseVisionCloudTextRecognizerOptions.Builder()
-                .setLanguageHints(Arrays.asList("en", "hi"))
-                .build();
 
         mDetector =  FirebaseVision.getInstance()
                 .getCloudTextRecognizer();
@@ -106,7 +110,9 @@ public class DashboardFragment extends Fragment {
                             public void onSuccess(FirebaseVisionText result) {
                                 mResult.setVisibility(View.VISIBLE);
                                 String resultText = result.getText();
-                                mResult.setText(result.getText());
+                                mText = resultText;
+                                mResult.setText(resultText);
+                                translate(resultText);
                                 Log.d("result", resultText);
                             }
                         })
@@ -121,6 +127,97 @@ public class DashboardFragment extends Fragment {
         }
     }
 
+    public void translate(String text) {
+        translateTextToEnglish(text);
+    }
+
+    public void translateText(FirebaseTranslator langTranslator) {
+        //translate source text to english
+        langTranslator.translate(mText)
+                .addOnSuccessListener(
+                        new OnSuccessListener<String>() {
+                            @Override
+                            public void onSuccess(@NonNull String translatedText) {
+                                mResult.setText(translatedText);
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+
+                            }
+                        });
+
+    }
+
+    public void downloadTranslatorAndTranslate(String langCode) {
+        //get source language id from bcp code
+        int sourceLanguage = FirebaseTranslateLanguage
+                .languageForLanguageCode(langCode);
+
+        //create translator for source and target languages
+        FirebaseTranslatorOptions options =
+                new FirebaseTranslatorOptions.Builder()
+                        .setSourceLanguage(sourceLanguage)
+                        .setTargetLanguage(FirebaseTranslateLanguage.EN)
+                        .build();
+        final FirebaseTranslator langTranslator =
+                FirebaseNaturalLanguage.getInstance().getTranslator(options);
+
+        //download language models if needed
+        FirebaseModelDownloadConditions conditions = new FirebaseModelDownloadConditions.Builder()
+                .requireWifi()
+                .build();
+        langTranslator.downloadModelIfNeeded(conditions)
+                .addOnSuccessListener(
+                        new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void v) {
+                                Log.d("translator", "downloaded lang  model");
+                                //after making sure language models are available
+                                //perform translation
+                                translateText(langTranslator);
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+
+                            }
+                        });
+    }
+
+    public void translateTextToEnglish(String text) {
+        //First identify the language of the entered text
+        FirebaseLanguageIdentification languageIdentifier =
+                FirebaseNaturalLanguage.getInstance().getLanguageIdentification();
+        languageIdentifier.identifyLanguage(text)
+                .addOnSuccessListener(
+                        new OnSuccessListener<String>() {
+                            @Override
+                            public void onSuccess(@Nullable String languageCode) {
+                                if (languageCode != "und") {
+                                    Log.d("translator", "lang "+languageCode);
+                                    //download translator for the identified language
+                                    // and translate the entered text into english
+                                    downloadTranslatorAndTranslate(languageCode);
+                                } else {
+
+                                }
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+
+                            }
+                        });
+    }
+
+    
 
 
 }
