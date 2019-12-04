@@ -84,7 +84,6 @@ public class DashboardFragment extends Fragment {
 
         return root;
     }
-
     private FirebaseVisionImage imageFromBitmap(Bitmap bitmap) {
         // [START image_from_bitmap]
         return FirebaseVisionImage.fromBitmap(bitmap);
@@ -222,8 +221,4 @@ public class DashboardFragment extends Fragment {
                             }
                         });
     }
-
-    
-
-
 }
