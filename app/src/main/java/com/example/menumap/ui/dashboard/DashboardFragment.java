@@ -111,8 +111,9 @@ public class DashboardFragment extends Fragment {
                                 mResult.setVisibility(View.VISIBLE);
                                 String resultText = result.getText();
                                 mText = resultText;
-                                mResult.setText(resultText);
-                                translate(resultText);
+                                translate(mText);
+                                //mResult.setText(mText);
+
                                 Log.d("result", resultText);
                             }
                         })
@@ -153,8 +154,11 @@ public class DashboardFragment extends Fragment {
 
     public void downloadTranslatorAndTranslate(String langCode) {
         //get source language id from bcp code
+
         int sourceLanguage = FirebaseTranslateLanguage
-                .languageForLanguageCode(langCode);
+                    .languageForLanguageCode(langCode);
+
+
 
         //create translator for source and target languages
         FirebaseTranslatorOptions options =
@@ -184,7 +188,7 @@ public class DashboardFragment extends Fragment {
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-
+                                mResult.setText("Download failed.");
                             }
                         });
     }
@@ -193,18 +197,19 @@ public class DashboardFragment extends Fragment {
         //First identify the language of the entered text
         FirebaseLanguageIdentification languageIdentifier =
                 FirebaseNaturalLanguage.getInstance().getLanguageIdentification();
-        languageIdentifier.identifyLanguage(text)
+        languageIdentifier.identifyLanguage(mText)
                 .addOnSuccessListener(
                         new OnSuccessListener<String>() {
                             @Override
                             public void onSuccess(@Nullable String languageCode) {
+
                                 if (languageCode != "und") {
                                     Log.d("translator", "lang "+languageCode);
                                     //download translator for the identified language
                                     // and translate the entered text into english
                                     downloadTranslatorAndTranslate(languageCode);
                                 } else {
-
+                                    mResult.setText("Unable to detect language.");
                                 }
                             }
                         })
@@ -212,7 +217,8 @@ public class DashboardFragment extends Fragment {
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-
+                                mResult.setText("Translation failed.");
+                                e.printStackTrace();
                             }
                         });
     }
