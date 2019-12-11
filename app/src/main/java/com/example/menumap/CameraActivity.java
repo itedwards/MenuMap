@@ -30,6 +30,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions;
 import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage;
 import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentification;
@@ -201,11 +202,9 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     public void onClick(View v) {
-
         if(v == mTranslateBtn) {
             mTranslateView.setVisibility(View.VISIBLE);
             mTranslateView.setText(mTranslateText);
-
         }
         else if(v == mBackBtn) {
             finish();

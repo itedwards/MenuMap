@@ -24,6 +24,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.example.menumap.AudioActivity;
+
 import com.example.menumap.CameraActivity;
 import com.example.menumap.MainActivity;
 import com.example.menumap.R;
@@ -33,6 +35,7 @@ public class DashboardFragment extends Fragment {
 
 
     private Button mCameraBtn;
+    private Button mAudioBtn;
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -49,6 +52,14 @@ public class DashboardFragment extends Fragment {
             }
         });
 
+        mAudioBtn = root.findViewById(R.id.audioBtn);
+        mAudioBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getActivity(), AudioActivity.class);
+                startActivity(intent);
+            }
+        });
 
         return root;
     }

@@ -38,6 +38,7 @@ public class NotificationsFragment extends Fragment {
         notificationsViewModel =
                 ViewModelProviders.of(this).get(NotificationsViewModel.class);
         View root = inflater.inflate(R.layout.fragment_notifications, container, false);
+
         DashboardFragment cameraFragment = (DashboardFragment) getFragmentManager().findFragmentById(R.id.navigation_dashboard);
         Spinner language_spinner = (Spinner) root.findViewById(R.id.language_spinner);
         Spinner targetSpinner = (Spinner) root.findViewById(R.id.targetSpinner);
