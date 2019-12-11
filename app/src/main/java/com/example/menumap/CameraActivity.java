@@ -20,9 +20,17 @@ import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions;
 import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage;
 import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentification;
@@ -35,7 +43,9 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class CameraActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -49,8 +59,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     private Button mBackBtn;
     private Button mAddBtn;
     private FirebaseVisionTextRecognizer mDetector;
-
-
+    private FirebaseFirestore mDB;
+    private DocumentSnapshot user;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -71,9 +81,11 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         mAddBtn = findViewById(R.id.addBtn);
         mDetector =  FirebaseVision.getInstance()
                 .getCloudTextRecognizer();
-
+        mDB = FirebaseFirestore.getInstance();
+        DocumentSnapshot user;
         processImage(photo);
 
+        getUser();
     }
     private FirebaseVisionImage imageFromBitmap(Bitmap bitmap) {
         // [START image_from_bitmap]
@@ -130,17 +142,13 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     public void downloadTranslator(String text) {
-        int sourceLanguage = 0;
-        try {
-            sourceLanguage = FirebaseTranslateLanguage
-                    .languageForLanguageCode(text);
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
+        int sourceLanguage = getLang(user.get("sourceLangPref").toString());
+        int targetLanguage = getLang(user.get("targetLangPref").toString());
+
         FirebaseTranslatorOptions options =
                 new FirebaseTranslatorOptions.Builder()
                         .setSourceLanguage(sourceLanguage)
-                        .setTargetLanguage(FirebaseTranslateLanguage.EN)
+                        .setTargetLanguage(targetLanguage)
                         .build();
         final FirebaseTranslator langTranslator =
                 FirebaseNaturalLanguage.getInstance().getTranslator(options);
@@ -202,7 +210,91 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             finish();
         }
         else {
-            
+            addToDB();
         }
+    }
+
+    public void addToDB() {
+
+
+        String[] translateArray = mTranslateText.split("\\s+");
+        String[] resultArray = mResultText.split("\\s+");
+
+        for (int i = 0; i < resultArray.length; i++) {
+
+            Map<String, String> translation = new HashMap<>();
+            translation.put("sourceText", resultArray[i]);
+            // replace with actual values
+            translation.put("sourceLang", user.get("sourceLangPref").toString());
+            translation.put("resultText", translateArray[i]);
+            translation.put("resultLang", user.get("targetLangPref").toString());
+
+            mDB.collection("translations")
+                    .add(translation)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(DocumentReference documentReference) {
+                            Log.d("added doc", documentReference.getId());
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+
+        }
+    }
+
+
+
+    private void getUser(){
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        DocumentReference docRef = mDB.collection("users").document(currentUser.getUid());
+
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()){
+                        user = document;
+                    }
+                    else {
+                        Log.d("not found", "no doc");
+                    }
+                }
+                else {
+                    Log.d("get failed", task.getException().toString());
+                }
+            }
+        });
+    }
+
+    private int getLang(String lang) {
+        switch (lang) {
+            case "English":
+                return FirebaseTranslateLanguage.EN;
+            case "Spanish":
+                return FirebaseTranslateLanguage.ES;
+            case "Chinese":
+                return FirebaseTranslateLanguage.ZH;
+            case "French":
+                return FirebaseTranslateLanguage.FR;
+            case "Dutch":
+                return FirebaseTranslateLanguage.NL;
+            case "German":
+                return FirebaseTranslateLanguage.DE;
+            case "Korean":
+                return FirebaseTranslateLanguage.KO;
+            case "Japanese":
+                return FirebaseTranslateLanguage.JA;
+            case "Russian":
+                return FirebaseTranslateLanguage.RU;
+
+        }
+
+        return -1;
     }
 }

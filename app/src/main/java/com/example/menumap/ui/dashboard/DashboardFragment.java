@@ -25,6 +25,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.menumap.AudioActivity;
+
 import com.example.menumap.CameraActivity;
 import com.example.menumap.MainActivity;
 import com.example.menumap.R;
@@ -59,7 +60,6 @@ public class DashboardFragment extends Fragment {
                 startActivity(intent);
             }
         });
-
 
         return root;
     }
