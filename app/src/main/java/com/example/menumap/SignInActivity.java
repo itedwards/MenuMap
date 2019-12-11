@@ -55,6 +55,7 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
 
         if (currentUser != null) {
             goToMainActivity(currentUser);
+
         }
     }
 
@@ -117,8 +118,9 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void goToMainActivity(FirebaseUser user){
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(SignInActivity.this, MainActivity.class);
         intent.putExtra("user", user);
         startActivity(intent);
+        finish();
     }
 }
