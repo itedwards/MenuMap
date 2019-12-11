@@ -15,15 +15,24 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions;
 import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage;
 import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentification;
@@ -36,26 +45,26 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
-public class AudioActivity extends AppCompatActivity {
+public class AudioActivity extends AppCompatActivity implements View.OnClickListener {
 
     private TextView audioResult;
     private ImageView buttonSpeak;
     private Button backButton;
     private String mTranslateText;
     private String mResultText;
+    private FirebaseFirestore mDB;
+    private DocumentSnapshot user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mDB = FirebaseFirestore.getInstance();
+        getUser();
         setContentView(R.layout.activity_audio);
         audioResult = findViewById(R.id.audioResult);
         buttonSpeak = findViewById(R.id.buttonSpeak);
-        buttonSpeak.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getSpeechInput();
-            }
-        });
+        buttonSpeak.setOnClickListener(this);
         backButton = findViewById(R.id.backButton);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,19 +72,26 @@ public class AudioActivity extends AppCompatActivity {
                 finish();
             }
         });
+
+    }
+
+    public void onClick(View view){
+        getSpeechInput();
     }
 
     public void getSpeechInput() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        //intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "zh");
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "zh");
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "zh");
-        intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, "zh");
-        intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE,"zh");
-        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "zh");
-        intent.putExtra(RecognizerIntent.EXTRA_RESULTS, "zh");
+        String iso = getISO(user.get("sourceLangPref").toString());
+
+
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, iso);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, iso);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, iso);
+        intent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, iso);
+        intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE,iso);
+        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, iso);
+        intent.putExtra(RecognizerIntent.EXTRA_RESULTS, iso);
 
         if(intent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(intent, 10);
@@ -127,17 +143,14 @@ public class AudioActivity extends AppCompatActivity {
     }
 
     public void downloadTranslator(String text) {
-        int sourceLanguage = 0;
-        try {
-            sourceLanguage = FirebaseTranslateLanguage
-                    .languageForLanguageCode(text);
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
+        Log.d("source",  user.get("sourceLangPref").toString());
+        int sourceLanguage = getLang(user.get("sourceLangPref").toString());
+        int targetLanguage = getLang(user.get("targetLangPref").toString());
+
         FirebaseTranslatorOptions options =
                 new FirebaseTranslatorOptions.Builder()
                         .setSourceLanguage(sourceLanguage)
-                        .setTargetLanguage(FirebaseTranslateLanguage.EN)
+                        .setTargetLanguage(targetLanguage)
                         .build();
         final FirebaseTranslator langTranslator =
                 FirebaseNaturalLanguage.getInstance().getTranslator(options);
@@ -174,6 +187,7 @@ public class AudioActivity extends AppCompatActivity {
                             public void onSuccess(@NonNull String translatedText) {
                                 mTranslateText = translatedText;
                                 audioResult.setText(mTranslateText);
+                                addToDB();
 
                             }
                         })
@@ -185,6 +199,119 @@ public class AudioActivity extends AppCompatActivity {
                             }
                         });
 
+    }
+
+    private String getISO(String lang) {
+        switch (lang) {
+            case "English":
+                return "en";
+            case "Spanish":
+                return "es";
+            case "Chinese":
+                return "zh";
+            case "French":
+                return "fr";
+            case "Dutch":
+                return "nl";
+            case "German":
+                return "de";
+            case "Korean":
+                return "ko";
+            case "Japanese":
+                return "ja";
+            case "Russian":
+                return "ru";
+
+        }
+
+        return "und";
+    }
+
+    private int getLang(String lang) {
+        switch (lang) {
+            case "English":
+                return FirebaseTranslateLanguage.EN;
+            case "Spanish":
+                return FirebaseTranslateLanguage.ES;
+            case "Chinese":
+                return FirebaseTranslateLanguage.ZH;
+            case "French":
+                return FirebaseTranslateLanguage.FR;
+            case "Dutch":
+                return FirebaseTranslateLanguage.NL;
+            case "German":
+                return FirebaseTranslateLanguage.DE;
+            case "Korean":
+                return FirebaseTranslateLanguage.KO;
+            case "Japanese":
+                return FirebaseTranslateLanguage.JA;
+            case "Russian":
+                return FirebaseTranslateLanguage.RU;
+
+        }
+
+        return -1;
+    }
+
+    private void getUser(){
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        Log.d("uid", currentUser.getUid());
+        if(mDB == null){
+            Log.d("mDB", "found null");
+        }
+        DocumentReference docRef = mDB.collection("users").document(currentUser.getUid());
+
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()){
+
+                        user = document;
+                    }
+                    else {
+                        Log.d("not found", "no doc");
+                    }
+                }
+                else {
+                    Log.d("get failed", task.getException().toString());
+                }
+            }
+        });
+    }
+
+    public void addToDB() {
+
+        String[] translateArray = mTranslateText.split("\\s+");
+        String[] resultArray = mResultText.split("\\s+");
+
+        for (int i = 0; i < resultArray.length; i++) {
+
+            Map<String, String> translation = new HashMap<>();
+            translation.put("sourceText", resultArray[i]);
+            // replace with actual values
+            translation.put("sourceLang", user.get("sourceLangPref").toString());
+            translation.put("resultText", translateArray[i]);
+            translation.put("resultLang", user.get("targetLangPref").toString());
+            translation.put("userID", user.getId());
+
+            mDB.collection("translations")
+                    .add(translation)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(DocumentReference documentReference) {
+                            Log.d("added doc", documentReference.getId());
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+
+        }
     }
 
 }

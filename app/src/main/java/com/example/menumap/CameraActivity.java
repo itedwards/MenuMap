@@ -82,7 +82,6 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         mDetector =  FirebaseVision.getInstance()
                 .getCloudTextRecognizer();
         mDB = FirebaseFirestore.getInstance();
-        DocumentSnapshot user;
         processImage(photo);
 
         getUser();
@@ -231,6 +230,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             translation.put("sourceLang", user.get("sourceLangPref").toString());
             translation.put("resultText", translateArray[i]);
             translation.put("resultLang", user.get("targetLangPref").toString());
+            translation.put("userID", user.getId());
 
             mDB.collection("translations")
                     .add(translation)

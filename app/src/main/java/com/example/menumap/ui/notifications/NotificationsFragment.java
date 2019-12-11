@@ -33,6 +33,7 @@ public class NotificationsFragment extends Fragment {
     private NotificationsViewModel notificationsViewModel;
     private FirebaseFirestore mDB;
 
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         notificationsViewModel =
@@ -40,9 +41,8 @@ public class NotificationsFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_notifications, container, false);
 
         DashboardFragment cameraFragment = (DashboardFragment) getFragmentManager().findFragmentById(R.id.navigation_dashboard);
-        Spinner language_spinner = (Spinner) root.findViewById(R.id.language_spinner);
+        final Spinner language_spinner = (Spinner) root.findViewById(R.id.language_spinner);
         Spinner targetSpinner = (Spinner) root.findViewById(R.id.targetSpinner);
-
 
 
         ArrayAdapter<String> languageAdapter = new ArrayAdapter<String>(getActivity(),
@@ -61,7 +61,6 @@ public class NotificationsFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 final String selected_language = adapterView.getItemAtPosition(i).toString();
-
                 Map<String, String> lang = new HashMap<>();
                 lang.put("sourceLangPref", selected_language);
 
