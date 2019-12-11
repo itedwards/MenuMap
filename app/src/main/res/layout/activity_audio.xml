@@ -25,4 +25,13 @@
         android:layout_gravity="center"
         android:src="@drawable/ic_mic_black_24dp" />
 
+    <Button
+        android:id="@+id/backButton"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:text="Back"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="30dp"
+        />
+
 </LinearLayout>

@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -15,10 +17,32 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions;
+import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage;
+import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentification;
+import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentificationOptions;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateLanguage;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslator;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOptions;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.text.FirebaseVisionText;
+import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
+
 public class AudioActivity extends AppCompatActivity {
 
     private TextView audioResult;
     private ImageView buttonSpeak;
+    private Button backButton;
+    private String mTranslateText;
+    private String mResultText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +54,13 @@ public class AudioActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 getSpeechInput();
+            }
+        });
+        backButton = findViewById(R.id.backButton);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
             }
         });
     }
@@ -61,9 +92,99 @@ public class AudioActivity extends AppCompatActivity {
             case 10:
                 if(resultCode == RESULT_OK && data != null) {
                     ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    audioResult.setText(result.get(0));
+                    mResultText = TextUtils.join(", ", result);
+                    identifyLanguage(mResultText);
+                    audioResult.setText(mTranslateText);
                 }
                 break;
         }
     }
+
+    public void identifyLanguage(String text) {
+        FirebaseLanguageIdentification languageIdentifier =
+                FirebaseNaturalLanguage.getInstance().getLanguageIdentification();
+        languageIdentifier.identifyLanguage(text)
+                .addOnSuccessListener(
+                        new OnSuccessListener<String>() {
+                            @Override
+                            public void onSuccess(@Nullable String languageCode) {
+                                if (languageCode != "und") {
+                                    downloadTranslator(languageCode);
+                                } else {
+                                    mTranslateText = "Can't identify language.";
+                                    audioResult.setText(mTranslateText);
+                                }
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                mTranslateText = "Internal error. Make sure your wifi is connected.";
+                                audioResult.setText(mTranslateText);
+                            }
+                        });
+    }
+
+    public void downloadTranslator(String text) {
+        int sourceLanguage = 0;
+        try {
+            sourceLanguage = FirebaseTranslateLanguage
+                    .languageForLanguageCode(text);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+        FirebaseTranslatorOptions options =
+                new FirebaseTranslatorOptions.Builder()
+                        .setSourceLanguage(sourceLanguage)
+                        .setTargetLanguage(FirebaseTranslateLanguage.EN)
+                        .build();
+        final FirebaseTranslator langTranslator =
+                FirebaseNaturalLanguage.getInstance().getTranslator(options);
+
+        FirebaseModelDownloadConditions conditions = new FirebaseModelDownloadConditions.Builder()
+                .requireWifi()
+                .build();
+        langTranslator.downloadModelIfNeeded(conditions)
+                .addOnSuccessListener(
+                        new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void v) {
+                                Log.d("translator", "downloaded lang  model");
+
+                                translateText(langTranslator);
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                mTranslateText = "Download failed.";
+                                audioResult.setText(mTranslateText);
+                            }
+                        });
+    }
+
+    public void translateText(FirebaseTranslator langTranslator) {
+
+        langTranslator.translate(mResultText)
+                .addOnSuccessListener(
+                        new OnSuccessListener<String>() {
+                            @Override
+                            public void onSuccess(@NonNull String translatedText) {
+                                mTranslateText = translatedText;
+                                audioResult.setText(mTranslateText);
+
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+
+                            }
+                        });
+
+    }
+
 }
