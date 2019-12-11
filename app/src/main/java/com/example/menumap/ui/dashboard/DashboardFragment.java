@@ -4,11 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.media.Image;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -29,46 +24,22 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.example.menumap.CameraActivity;
 import com.example.menumap.MainActivity;
 import com.example.menumap.R;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions;
-import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage;
-import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentification;
-import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateLanguage;
-import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslator;
-import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOptions;
-import com.google.firebase.ml.vision.FirebaseVision;
-import com.google.firebase.ml.vision.common.FirebaseVisionImage;
-import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
-import com.google.firebase.ml.vision.document.FirebaseVisionCloudDocumentRecognizerOptions;
-import com.google.firebase.ml.vision.document.FirebaseVisionDocumentText;
-import com.google.firebase.ml.vision.document.FirebaseVisionDocumentTextRecognizer;
-import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptions;
-import com.google.firebase.ml.vision.text.FirebaseVisionText;
-import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
-import java.util.Arrays;
 
 public class DashboardFragment extends Fragment {
 
-    private DashboardViewModel dashboardViewModel;
-    private ImageView mImageView;
+
     private Button mCameraBtn;
-    private String mText;
-    private TextView mResult;
-    private FirebaseVisionTextRecognizer mDetector;
+
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         View root = inflater.inflate(R.layout.fragment_dashboard, container, false);
-        mImageView = root.findViewById(R.id.imageView);
-        mImageView.setVisibility(View.GONE);
-        mResult = root.findViewById(R.id.resultView);
-        mResult.setVisibility(TextView.GONE);
+
         mCameraBtn = root.findViewById(R.id.cameraBtn);
         mCameraBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,16 +50,9 @@ public class DashboardFragment extends Fragment {
         });
 
 
-        mDetector =  FirebaseVision.getInstance()
-                .getCloudTextRecognizer();
-
         return root;
     }
-    private FirebaseVisionImage imageFromBitmap(Bitmap bitmap) {
-        // [START image_from_bitmap]
-        return FirebaseVisionImage.fromBitmap(bitmap);
-        // [END image_from_bitmap]
-    }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -96,129 +60,15 @@ public class DashboardFragment extends Fragment {
             Log.d("check", "in onActivityResult");
             Bundle extras = data.getExtras();
             if(extras != null) {
+                Intent explicit = new Intent(getActivity(), CameraActivity.class);
                 Bitmap bm = (Bitmap) extras.get("data");
-                this.mImageView.setImageBitmap(bm);
-                mImageView.setVisibility(View.VISIBLE);
-                mCameraBtn.setVisibility(Button.GONE);
-                FirebaseVisionImage image = imageFromBitmap(bm);
+                explicit.putExtra("photo", bm);
+                startActivity(explicit);
 
 
-                Task<FirebaseVisionText> result = mDetector.processImage(image)
-                        .addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
-                            @Override
-                            public void onSuccess(FirebaseVisionText result) {
-                                mResult.setVisibility(View.VISIBLE);
-                                String resultText = result.getText();
-                                mText = resultText;
-                                translate(mText);
-                                //mResult.setText(mText);
-
-                                Log.d("result", resultText);
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                e.printStackTrace();
-                            }
-                        });
 
             }
         }
     }
 
-    public void translate(String text) {
-        translateTextToEnglish(text);
-    }
-
-    public void translateText(FirebaseTranslator langTranslator) {
-        //translate source text to english
-        langTranslator.translate(mText)
-                .addOnSuccessListener(
-                        new OnSuccessListener<String>() {
-                            @Override
-                            public void onSuccess(@NonNull String translatedText) {
-                                mResult.setText(translatedText);
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-
-                            }
-                        });
-
-    }
-
-    public void downloadTranslatorAndTranslate(String langCode) {
-        //get source language id from bcp code
-
-        int sourceLanguage = FirebaseTranslateLanguage
-                    .languageForLanguageCode(langCode);
-
-
-
-        //create translator for source and target languages
-        FirebaseTranslatorOptions options =
-                new FirebaseTranslatorOptions.Builder()
-                        .setSourceLanguage(sourceLanguage)
-                        .setTargetLanguage(FirebaseTranslateLanguage.EN)
-                        .build();
-        final FirebaseTranslator langTranslator =
-                FirebaseNaturalLanguage.getInstance().getTranslator(options);
-
-        //download language models if needed
-        FirebaseModelDownloadConditions conditions = new FirebaseModelDownloadConditions.Builder()
-                .requireWifi()
-                .build();
-        langTranslator.downloadModelIfNeeded(conditions)
-                .addOnSuccessListener(
-                        new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void v) {
-                                Log.d("translator", "downloaded lang  model");
-                                //after making sure language models are available
-                                //perform translation
-                                translateText(langTranslator);
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                mResult.setText("Download failed.");
-                            }
-                        });
-    }
-
-    public void translateTextToEnglish(String text) {
-        //First identify the language of the entered text
-        FirebaseLanguageIdentification languageIdentifier =
-                FirebaseNaturalLanguage.getInstance().getLanguageIdentification();
-        languageIdentifier.identifyLanguage(mText)
-                .addOnSuccessListener(
-                        new OnSuccessListener<String>() {
-                            @Override
-                            public void onSuccess(@Nullable String languageCode) {
-
-                                if (languageCode != "und") {
-                                    Log.d("translator", "lang "+languageCode);
-                                    //download translator for the identified language
-                                    // and translate the entered text into english
-                                    downloadTranslatorAndTranslate(languageCode);
-                                } else {
-                                    mResult.setText("Unable to detect language.");
-                                }
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                mResult.setText("Translation failed.");
-                                e.printStackTrace();
-                            }
-                        });
-    }
 }
