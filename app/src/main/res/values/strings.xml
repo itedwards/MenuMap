@@ -31,4 +31,5 @@
         <item>Japanese</item>
         <item>Russian</item>
     </string-array>
+    <string name="server_client_id">http://930445243029-agaoneokk1rtanp2m4h022rdofugodp7.apps.googleusercontent.com</string>
 </resources>
