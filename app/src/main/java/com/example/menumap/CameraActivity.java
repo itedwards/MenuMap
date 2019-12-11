@@ -141,6 +141,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     public void downloadTranslator(String text) {
+        Log.d("source",  user.get("sourceLangPref").toString());
         int sourceLanguage = getLang(user.get("sourceLangPref").toString());
         int targetLanguage = getLang(user.get("targetLangPref").toString());
 
@@ -152,6 +153,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         final FirebaseTranslator langTranslator =
                 FirebaseNaturalLanguage.getInstance().getTranslator(options);
 
+
+
         FirebaseModelDownloadConditions conditions = new FirebaseModelDownloadConditions.Builder()
                 .requireWifi()
                 .build();
@@ -161,7 +164,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                             @Override
                             public void onSuccess(Void v) {
                                 Log.d("translator", "downloaded lang  model");
-
+                                mTranslateView.setText("Translating. Please try again in a minute.");
                                 translateText(langTranslator);
                             }
                         })
