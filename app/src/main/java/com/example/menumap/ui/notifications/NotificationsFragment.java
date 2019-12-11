@@ -29,13 +29,17 @@ public class NotificationsFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_notifications, container, false);
 
         Spinner language_spinner = (Spinner) root.findViewById(R.id.language_spinner);
+        Spinner targetSpinner = (Spinner) root.findViewById(R.id.targetSpinner);
+
+
 
         ArrayAdapter<String> languageAdapter = new ArrayAdapter<String>(getActivity(),
                 android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.language_options));
 
+
         languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         language_spinner.setAdapter(languageAdapter);
-
+        targetSpinner.setAdapter(languageAdapter);
         //The code below gets the string value of the language selected
 
         language_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -50,7 +54,18 @@ public class NotificationsFragment extends Fragment {
 
             }
         });
+        targetSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String selected_language = adapterView.getItemAtPosition(i).toString();
+                Log.d("Language Chosen: ", selected_language);
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         return root;
     }
 }

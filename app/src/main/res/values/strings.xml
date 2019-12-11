@@ -14,6 +14,12 @@
     <string name="add">Add</string>
     <string name="main_title">Main Title</string>
     <string name="sub_title">Sub Title</string>
+    <string name="target">target</string>
+    <string name="source">source</string>
+    <string name="source_">Select Source Language</string>
+    <string name="target_">Select Target Language</string>
+    <string name="select_source_language">Select Source Language</string>
+    <string name="select_target_lanuguage">Select Target Lanuguage</string>
     <string-array name="language_options">
         <item>English</item>
         <item>Spanish</item>

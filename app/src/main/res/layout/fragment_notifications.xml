@@ -11,15 +11,32 @@
     android:orientation="vertical">
 
 
+    <TextView
+        android:id="@+id/sourceView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/select_source_language" />
+
     <Spinner
         android:id="@+id/language_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="20sp"
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="6dp" />
 
     <TextView
-        android:id="@+id/text_settings"
+        android:id="@+id/targetView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="@string/select_target_lanuguage" />
+
+    <Spinner
+        android:id="@+id/targetSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20sp"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="6dp" />
+
 </LinearLayout>
