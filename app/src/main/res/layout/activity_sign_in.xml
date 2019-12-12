@@ -5,7 +5,8 @@
     android:id="@+id/signin_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SignInActivity">
+    tools:context=".SignInActivity"
+    android:background="#CCE5FF">
 
     <com.google.android.gms.common.SignInButton
         android:id="@+id/sign_in_button"
