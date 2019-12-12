@@ -4,39 +4,60 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginBottom="16dp"
-    android:layout_marginTop="16dp"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#CCE5FF">
 
 
     <TextView
         android:id="@+id/sourceView"
+        android:gravity="center"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/select_source_language" />
+        android:layout_height="0dp"
+        android:layout_weight="0.1"
+        android:text="@string/select_source_language"
+        android:textStyle="bold"
+        android:textSize="20sp"/>
 
     <Spinner
         android:id="@+id/language_spinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="0.2"
         android:padding="20sp"
         tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="6dp" />
+        tools:layout_editor_absoluteY="6dp"
+        />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.2"
+        android:background="#CCE5FF"/>
 
     <TextView
         android:id="@+id/targetView"
+        android:text="@string/select_target_lanuguage"
+        android:gravity="center"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/select_target_lanuguage" />
+        android:layout_height="0dp"
+        android:layout_weight="0.1"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        />
 
     <Spinner
         android:id="@+id/targetSpinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="0.2"
         android:padding="20sp"
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="6dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.4"
+        android:background="#CCE5FF"/>
 
 </LinearLayout>
