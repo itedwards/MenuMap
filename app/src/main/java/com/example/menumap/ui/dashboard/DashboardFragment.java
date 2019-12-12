@@ -76,8 +76,6 @@ public class DashboardFragment extends Fragment {
                 explicit.putExtra("photo", bm);
                 startActivity(explicit);
 
-
-
             }
         }
     }

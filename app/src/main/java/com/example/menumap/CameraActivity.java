@@ -237,6 +237,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
                         public void onSuccess(DocumentReference documentReference) {
+                            Toast.makeText(getApplicationContext(), "Translation Successfully Added!", Toast.LENGTH_SHORT).show();
                             Log.d("added doc", documentReference.getId());
                         }
                     })
