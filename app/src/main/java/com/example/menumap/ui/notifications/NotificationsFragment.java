@@ -1,11 +1,13 @@
 package com.example.menumap.ui.notifications;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -16,7 +18,9 @@ import androidx.lifecycle.ViewModelProviders;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 
+import com.example.menumap.MainActivity;
 import com.example.menumap.R;
+import com.example.menumap.SignInActivity;
 import com.example.menumap.ui.dashboard.DashboardFragment;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -43,6 +47,15 @@ public class NotificationsFragment extends Fragment {
         DashboardFragment cameraFragment = (DashboardFragment) getFragmentManager().findFragmentById(R.id.navigation_dashboard);
         final Spinner language_spinner = (Spinner) root.findViewById(R.id.language_spinner);
         Spinner targetSpinner = (Spinner) root.findViewById(R.id.targetSpinner);
+
+
+        Button signout = root.findViewById(R.id.signout);
+        signout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signOut();
+            }
+        });
 
 
         ArrayAdapter<String> languageAdapter = new ArrayAdapter<String>(getActivity(),
@@ -114,5 +127,11 @@ public class NotificationsFragment extends Fragment {
             }
         });
         return root;
+    }
+
+    public void signOut(){
+        FirebaseAuth.getInstance().signOut();
+        Intent goToSignIn = new Intent(getActivity(), SignInActivity.class);
+        startActivity(goToSignIn);
     }
 }

@@ -60,6 +60,14 @@
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="6dp" />
 
+
+    <Button
+        android:id="@+id/signout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#62B2FF"
+        android:text="Sign Out" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="0dp"
