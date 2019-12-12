@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -28,6 +29,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -288,13 +290,14 @@ public class AudioActivity extends AppCompatActivity implements View.OnClickList
 
         for (int i = 0; i < resultArray.length; i++) {
 
-            Map<String, String> translation = new HashMap<>();
+            Map<String, Object> translation = new HashMap<>();
             translation.put("sourceText", resultArray[i]);
             // replace with actual values
             translation.put("sourceLang", user.get("sourceLangPref").toString());
             translation.put("resultText", translateArray[i]);
             translation.put("resultLang", user.get("targetLangPref").toString());
             translation.put("userID", user.getId());
+            translation.put("createdAt", new Timestamp(new Date()));
 
             mDB.collection("translations")
                     .add(translation)

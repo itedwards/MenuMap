@@ -29,6 +29,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -76,25 +77,31 @@ public class HomeFragment extends Fragment {
 
     private void makeListFromDB() {
 
-        mDB.collection(COLLECTION_PATH).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        StringBuilder fields = new StringBuilder("");
-                        fields.append("Original Text: ").append(document.getString(SOURCE_TEXT));
-                        fields.append("\nTranslation: ").append(document.getString(RESULT_TEXT));
-                        fields.append("\nOriginal Language: ").append(document.getString(SOURCE_LANGUAGE));
-                        fields.append("\nTranslated to: ").append(document.getString(RESULT_LANGUAGE));
-                        arrayAdapter.add(fields.toString());
+        Log.d("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+        mDB.collection(COLLECTION_PATH)
+                .whereEqualTo("userID", FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                StringBuilder fields = new StringBuilder("");
+                                fields.append("Original Text: ").append(document.getString(SOURCE_TEXT));
+                                fields.append("\nTranslation: ").append(document.getString(RESULT_TEXT));
+                                fields.append("\nOriginal Language: ").append(document.getString(SOURCE_LANGUAGE));
+                                fields.append("\nTranslated to: ").append(document.getString(RESULT_LANGUAGE));
+                                arrayAdapter.add(fields.toString());
 
 
+                            }
+                        } else {
+                            Log.d("collection", "Error getting documents: ", task.getException());
+                        }
                     }
-                } else {
-                    Log.d("collection", "Error getting documents: ", task.getException());
-                }
-            }
-        })
+                })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
