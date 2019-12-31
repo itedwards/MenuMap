@@ -19,8 +19,8 @@ After translating, users have the option of saving the translated text into a di
 - Android APIs
 
 ## Screenshots
-![Dictionary](/screenshots/dictionary.png)
 ![Translate](/screenshots/translate.png)
+![Dictionary](/screenshots/dictionary.png)
 ![Settings](/screenshots/settings.png)
 
 
